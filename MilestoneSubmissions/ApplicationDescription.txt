@@ -1,0 +1,7 @@
+Chorify is an application that gamifies household chores by turning everyday responsibilities into a fun, competitive experience. 
+The application allows users to create a household, assign who has admin access, add chores, and assign point values to each task based on its difficulty or effort. 
+Everyone in the household can access the shared chores list, view available tasks, and earn points by completing chores.
+
+Chorify keeps track of each member’s points and displays a live leaderboard so users can see who is in the lead. 
+By introducing friendly competition and a reward system, Chorify tries to encourage household members to contribute more consistently to shared responsibilities. 
+The goal is to make managing chores easier and more engaging for families, roommates, and other shared households.
