@@ -1,0 +1,7 @@
+Our team will use an Agile development methodology for organizing the four-week development process for Chorify. 
+We will divide the project into smaller tasks and delegate them based on each team member’s strengths and skills. 
+To stay organized and meet deadlines, we will use a checklist based on the requirements for each weekly submission, allowing us to track completed tasks and identify what still needs to be done and by who.
+
+Throughout development we will communicate regularly to discuss progress, address challenges, and ensure everyone is on track. 
+We will prioritize essential features, test functionality as it is developed, and make adjustments as needed. 
+This approach will help our team collaborate effectively while staying on schedule, and deliver a functional version of Chorify within the four-week timeline.
