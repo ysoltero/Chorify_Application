@@ -1,0 +1,3 @@
+For families, roommates, and other shared households who want an easier and more engaging way to manage chores. 
+Chorify is a collaborative chore-management application that motivates users to complete household tasks through points and friendly competition. 
+Unlike other chore-tracking applications, our product uses a shared point system and live leaderboard to make everyday responsibilities more fun and rewarding.
