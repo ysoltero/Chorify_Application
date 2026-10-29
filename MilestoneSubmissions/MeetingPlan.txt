@@ -1,0 +1,12 @@
+Team Meetings:
+    Day: Tuesday
+    Time: 5:00 PM
+    Modality: In person
+    Location: ITLL
+
+Weekly TA Meetings
+    Day: During the scheduled lab period
+    Time: During lab hours
+    Modality: In person
+    Location: Lab classroom
+    Purpose: Discuss and review the previous week's work with the TA and address any questions or challenges.
