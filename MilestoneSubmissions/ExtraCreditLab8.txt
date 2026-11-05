@@ -1,0 +1,28 @@
+Project Risk Analysis
+
+1.Incorrect Point Tracking
+Severity: High
+Risk: Users receiving the wrong number of points or earn points more than once for the same chore.
+Mitigation: Test the point system and make sure points are only awarded once per completed chore.
+
+2.User Privacy and Data Security
+Severity: High
+Risk: Personal information could be accessed by unauthorized users.
+Mitigation: Protect passwords, secure user information, and limit access to personal data.
+
+3.Missed Chores and Notifications
+Severity: Medium
+Risk: Users might forget about assigned chores if they do not check the app regularly.
+Mitigation: Add reminders or notifications to help users remember when chores need to be completed.
+
+4.Technical Bugs and Crashes
+Severity: High
+Risk: Bugs could prevent users from accessing chores or earning points.
+Mitigation: Testing the app regularly and fix issues before we release it. 
+
+5.Users Losing Interest
+Severity: Medium
+Risk: Users might stop using the app if it becomes boring or repetitive.
+Mitigation: Add rewards, levels, and achievements to keep users motivated, but dont make the system too complicated.
+
+

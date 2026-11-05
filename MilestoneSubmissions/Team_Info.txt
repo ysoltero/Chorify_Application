@@ -1,0 +1,22 @@
+Team Number: 014-04
+
+Team Name: Cohabitants
+
+Team Members:
+Arianna Sluis:
+		GitHub: arsluis27
+    Email: arsl4995@colorado.edu 
+Yeyra Soltero:
+    GitHub: ysoltero
+    Email: yeso1155@colorado.edu 
+Cassandra Howard:
+    GitHub: cchoward0322
+    Email: caho3552@colorado.edu 
+Brynn Nevers:
+	GitHub: brnevers
+	Email: brne2238@colorado.edu 
+Ameenah Razi:
+    GitHub: AmeenahRazi
+    Email: amra5248@colorado.edu 
+
+Application Name: Chorify
