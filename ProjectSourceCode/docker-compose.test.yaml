@@ -1,0 +1,33 @@
+
+services:
+  db-test:
+    image: postgres:17.6
+    environment:
+      POSTGRES_USER: chorify
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: chorify_test
+    healthcheck:
+      test: ["CMD-SHELL", "pg_isready -U chorify -d chorify_test"]
+      interval: 2s
+      timeout: 5s
+      retries: 20
+    volumes:
+      - ../src/init_data:/docker-entrypoint-initdb.d:ro
+
+  tests:
+    image: node:22-bookworm
+    working_dir: /repository/ProjectSourceCode
+    environment:
+      NODE_ENV: test
+      POSTGRES_HOST: db-test
+      POSTGRES_PORT: 5432
+      POSTGRES_USER: chorify
+      POSTGRES_PASSWORD: testpassword
+      POSTGRES_DB: chorify_test
+    depends_on:
+      db-test:
+        condition: service_healthy
+    volumes:
+      - ../:/repository
+    command: ["sh", "-c", "npm install && NODE_PATH=/repository/ProjectSourceCode/node_modules npm test"]
+

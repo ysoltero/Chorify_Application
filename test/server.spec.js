@@ -2,7 +2,7 @@
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const app = require('../app');
-const db = require('../src/db'); // Adjust path if db.js is in root
+const { db } = require('../ProjectSourceCode/src/db'); // Adjust path if db.js is in root
 const { expect } = chai;
 
 chai.use(chaiHttp);
@@ -14,9 +14,7 @@ describe('API Integration Tests: /register', () => {
   });
 
   // Close the DB pool after all tests finish so Mocha exits cleanly
-  after(async () => {
-    await db.$pool.end();
-  });
+
 
   // 1. Positive Test Case
   it('Positive: should successfully register a new user with valid credentials', (done) => {

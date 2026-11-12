@@ -1,0 +1,17 @@
+
+{
+  "scripts": {
+    "test": "mocha --timeout 10000 \"../test/**/*.spec.js\""
+  },
+  "dependencies": {
+    "express": "^4.21.2",
+    "bcryptjs": "^2.4.3",
+    "pg-promise": "^11.10.2"
+  },
+  "devDependencies": {
+    "mocha": "^10.8.2",
+    "chai": "^4.5.0",
+    "chai-http": "^4.4.0"
+  }
+}
+
