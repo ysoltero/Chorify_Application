@@ -67,4 +67,8 @@ app.post('/chores', async (req, res) => {
 });
 
 
+app.get('/welcome', (req, res) => {
+    res.status(200).json({ message: 'Welcome!' });
+});
+
 module.exports = app;
