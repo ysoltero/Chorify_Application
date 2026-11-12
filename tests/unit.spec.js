@@ -2,7 +2,7 @@
 
 // test/unit.spec.js
 const { expect } = require('chai');
-const validateRegistration = require('../src/validateRegistration');
+const validateRegistration = require('../ProjectSourceCode/validateRegistration');
 
 describe('Unit Test: validateRegistration', () => {
   it('should return valid: false if username is missing', () => {

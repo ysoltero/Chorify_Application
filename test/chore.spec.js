@@ -3,7 +3,7 @@ const { expect } = require('chai');
 const chai = require('chai');
 const chaiHttp = require('chai-http');
 const { randomUUID } = require('crypto');
-const app = require('../ProjectSourceCode/app');
+const app = require('../app');
 const { db } = require('../ProjectSourceCode/src/db');
 
 chai.use(chaiHttp);
