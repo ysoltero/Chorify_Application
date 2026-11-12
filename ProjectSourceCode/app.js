@@ -34,4 +34,29 @@ app.post('/register', async (req, res) => {
   }
 });
 
+
+app.post('/chores', async (req, res) => {
+    const { name, points } = req.body;
+
+    if (!name || typeof name !== 'string' || name.trim() === '') {
+        return res.status(400).json({ error: 'Chore name is required' });
+    }
+
+    if (!Number.isInteger(points) || points < 0) {
+        return res.status(400).json({ error: 'Points must be a nonnegative integer' });
+    }
+
+    try {
+        await db.none(
+            'INSERT INTO chores (name, points) VALUES ($1, $2)',
+            [name, points]
+        );
+
+        return res.status(201).json({ message: 'Chore created successfully' });
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({ error: 'Failed to create chore' });
+    }
+});
+
 module.exports = app;

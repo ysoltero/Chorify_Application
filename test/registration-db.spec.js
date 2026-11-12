@@ -4,8 +4,9 @@ const chai = require('chai');
 const chaiHttp = require('chai-http');
 const bcrypt = require('bcryptjs');
 const { randomUUID } = require('crypto');
-const app = require('../app');
-const db = require('../ProjectSourceCode/src/db');
+
+const app = require('../ProjectSourceCode/app');
+const { db } = require('../ProjectSourceCode/src/db');
 
 chai.use(chaiHttp);
 
@@ -23,8 +24,8 @@ describe('Registration Database Test', () => {
             password: password
         });
 
-        expect(res).to.have.status(200);
-        expect(res.body.message).to.equal('User registered successfully');
+        expect(res).to.have.status(201);
+        expect(res.body.message).to.equal('Registration successful');
 
         const users = await db.any('SELECT * FROM users WHERE username = $1', [username]);
 
