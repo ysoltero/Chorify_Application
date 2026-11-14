@@ -1,0 +1,71 @@
+<link rel="stylesheet" href="/css/login.css">
+
+<header>
+    <div class="logo">Chorify</div>
+
+    <nav>
+        <a href="/">Home</a>
+        <a href="/about">About</a>
+        <a href="/login">Login</a>
+    </nav>
+</header>
+
+<main class="main-container">
+
+    <div class="login-container">
+
+        <h1>Log in to Chorify</h1>
+
+        <form action="/login" method="POST">
+
+            <div class="form-group">
+                <label for="username">
+                    Email address or username
+                </label>
+
+                <input
+                    type="text"
+                    id="username"
+                    name="username"
+                    required
+                >
+            </div>
+
+            <div class="form-group">
+                <label for="password">Password</label>
+
+                <input
+                    type="password"
+                    id="password"
+                    name="password"
+                    required
+                >
+            </div>
+
+            <div class="login-options">
+
+                <label class="remember-me">
+                    <input type="checkbox" name="remember">
+                    Remember me
+                </label>
+
+                <a href="/forgot-password">
+                    Forgot password?
+                </a>
+
+            </div>
+
+            <button type="submit" class="login-button">
+                Log in
+            </button>
+
+        </form>
+
+        <div class="create-account">
+            New to Chorify?
+            <a href="/register">Create an account</a>
+        </div>
+
+    </div>
+
+</main>
