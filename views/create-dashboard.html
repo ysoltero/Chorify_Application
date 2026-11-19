@@ -191,7 +191,6 @@
     const myTasksBtn = document.getElementById("myTasksBtn");
     const completedBtn = document.getElementById("completedBtn");
     const tasks = document.querySelectorAll(".task-card");
-
 function setActiveButton(activeButton) {
     const buttons = [allTasksBtn, myTasksBtn, completedBtn];
 
@@ -222,9 +221,9 @@ myTasksBtn.addEventListener("click", function () {
 });
 
 completedBtn.addEventListener("click", function () {
-    tasks.forEach(task => {
+    document.querySelectorAll(".task-card").forEach(task => {
         task.style.display =
-            task.dataset.status === "completed" ? "block" : "none";
+            task.querySelector(".complete-checkbox").checked ? "block" : "none";
     });
 
     setActiveButton(completedBtn);
@@ -287,7 +286,16 @@ document.addEventListener("DOMContentLoaded", function() {
 `;
 
     document.getElementById("taskList").appendChild(task);
-    
+    const checkbox = task.querySelector(".complete-checkbox");
+
+    checkbox.addEventListener("change", function () {
+        if (this.checked) {
+            task.dataset.status = "completed";
+        } else {
+            task.dataset.status = "todo";
+        }
+    });
+        
 
 
     this.reset();
