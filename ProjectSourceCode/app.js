@@ -6,6 +6,7 @@ const validateRegistration = require('./src/validateRegistration');
 const app = express();
 
 app.use(express.json());
+app.use(express.static(require('path').join(__dirname, 'public')));
 app.use(express.urlencoded({extended: true}));
 
 app.get('/welcome', (req, res) => {
@@ -238,6 +239,74 @@ app.delete('/households/:id/leave', async (req, res) => {
     } catch (err) {
         console.error(err);
         return res.status(500).json({message: 'Failed to leave household'});
+    }
+});
+
+
+app.get('/my-chores', async (req, res) => {
+    const {username} = req.query;
+    if (!username) return res.status(400).json({message: 'Username is required'});
+    try {
+        const chores = await db.any(
+            `SELECT id, name, points, assigned_to, household_id,
+                    due_date::text AS due_date, completed
+             FROM chores WHERE assigned_to = $1
+             ORDER BY completed, due_date NULLS LAST, id`,
+            [username]
+        );
+        return res.json({chores});
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({message: 'Failed to load chores'});
+    }
+});
+
+app.post('/assigned-chores', async (req, res) => {
+    const {name, points, assigned_to, household_id, due_date} = req.body;
+    const id = Number(household_id);
+    if (typeof name !== 'string' || !name.trim() ||
+        !Number.isInteger(points) || points < 0 ||
+        typeof assigned_to !== 'string' || !assigned_to.trim() ||
+        !Number.isInteger(id) || id <= 0 ||
+        !/^\d{4}-\d{2}-\d{2}$/.test(due_date || '')) {
+        return res.status(400).json({message: 'Invalid chore information'});
+    }
+    try {
+        const member = await db.oneOrNone(
+            'SELECT 1 FROM household_members WHERE household_id = $1 AND username = $2',
+            [id, assigned_to]
+        );
+        if (!member) return res.status(400).json({message: 'User is not in this household'});
+        const chore = await db.one(
+            `INSERT INTO chores (name, points, assigned_to, household_id, due_date)
+             VALUES ($1, $2, $3, $4, $5) RETURNING id`,
+            [name.trim(), points, assigned_to, id, due_date]
+        );
+        return res.status(201).json({message: 'Chore assigned', chore});
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({message: 'Failed to assign chore'});
+    }
+});
+
+app.patch('/chores/:id/complete', async (req, res) => {
+    const id = Number(req.params.id);
+    const {username} = req.body;
+    if (!Number.isInteger(id) || id <= 0 || !username) {
+        return res.status(400).json({message: 'Invalid request'});
+    }
+    try {
+        const chore = await db.oneOrNone(
+            `UPDATE chores SET completed = TRUE
+             WHERE id = $1 AND assigned_to = $2
+             RETURNING id, completed`,
+            [id, username]
+        );
+        if (!chore) return res.status(404).json({message: 'Assigned chore not found'});
+        return res.json({message: 'Chore completed', chore});
+    } catch (err) {
+        console.error(err);
+        return res.status(500).json({message: 'Failed to complete chore'});
     }
 });
 

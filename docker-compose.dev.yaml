@@ -1,0 +1,18 @@
+services:
+  web:
+    image: node:22-bookworm
+    working_dir: /repository/ProjectSourceCode
+    env_file:
+      - .env.test
+    environment:
+      POSTGRES_HOST: db-test
+      POSTGRES_PORT: 5432
+      PORT: 3000
+    ports:
+      - "3000:3000"
+    volumes:
+      - ./:/repository
+    depends_on:
+      db-test:
+        condition: service_healthy
+    command: sh -c "npm install && node index.js"

@@ -1,0 +1,307 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Chorify Dashboard</title>
+<style>
+* {box-sizing:border-box}
+body {font-family:Arial,sans-serif;background:#f5f3ff;color:#29243a;margin:0}
+header {background:#6049a7;color:white;padding:22px 6%}
+header h1 {margin:0;font-size:30px}
+header p {margin:5px 0 0;color:#e8dfff}
+main {max-width:1100px;margin:25px auto;padding:0 18px}
+section {background:white;padding:24px;border-radius:15px;margin-bottom:20px;box-shadow:0 3px 14px #35265a12}
+h2 {margin-top:0;color:#493482}
+h3 {margin-bottom:12px}
+input,select {padding:11px;border:1px solid #ccc;border-radius:7px;width:100%;margin:5px 0 12px;font-size:14px}
+button {background:#6049a7;color:white;border:0;border-radius:7px;padding:11px 16px;cursor:pointer;margin:4px 4px 4px 0}
+button:hover {background:#493482}
+button:disabled {background:#aaa;cursor:default}
+.secondary {background:#eae5f7;color:#493482}
+.danger {background:#b94c60}
+.grid {display:grid;grid-template-columns:1fr 1fr;gap:20px}
+.item {border:1px solid #e4e0ee;padding:15px;border-radius:10px;margin:10px 0}
+.done {background:#eff9f1;opacity:.8}
+.done h3 {text-decoration:line-through}
+.small {font-size:13px;color:#777}
+#message {padding:12px;border-radius:8px;display:none;margin-bottom:18px;background:#eae5f7}
+#message.error {background:#ffe5e5;color:#a32323}
+@media(max-width:750px){.grid{grid-template-columns:1fr}}
+</style>
+</head>
+<body>
+<header>
+<h1>Chorify</h1>
+<p>Make sharing chores a little easier.</p>
+</header>
+<main>
+<div id="message" role="status"></div>
+
+<section>
+<h2>My Account</h2>
+<p class="small">Development demo: select a registered user to view their dashboard.</p>
+<input id="username" placeholder="Your username">
+<button onclick="login()">Open Dashboard</button>
+<details>
+<summary>New user? Register here</summary>
+<input id="newUser" placeholder="Username">
+<input id="newPassword" type="password" placeholder="Password (8+ characters)">
+<button onclick="register()">Register</button>
+</details>
+</section>
+
+<div id="dashboard" style="display:none">
+<div class="grid">
+<section>
+<h2>My Households</h2>
+<div id="households"></div>
+<h3>Create Household</h3>
+<input id="householdName" placeholder="Household name">
+<button onclick="createHousehold()">Create Household</button>
+</section>
+
+<section>
+<h2>Household Members</h2>
+<select id="householdSelect" onchange="loadMembers()"></select>
+<div id="members"></div>
+<h3>Add Member</h3>
+<input id="memberName" placeholder="Registered username">
+<button onclick="addMember()">Add Member</button>
+<button class="danger" onclick="leaveHousehold()">Leave Household</button>
+</section>
+</div>
+
+<section>
+<h2>My Assigned Chores</h2>
+<p class="small">Complete your chores to keep your household on track.</p>
+<div id="chores"></div>
+</section>
+
+<section>
+<h2>Assign a Chore</h2>
+<p class="small">Demo utility for creating assignments to test the chore dashboard.</p>
+<div class="grid">
+<div>
+<label>Chore name</label>
+<input id="choreName" placeholder="Take out the trash">
+<label>Assigned to</label>
+<select id="assignee"></select>
+</div>
+<div>
+<label>Points</label>
+<input id="points" type="number" min="0" value="10">
+<label>Due date</label>
+<input id="dueDate" type="date">
+</div>
+</div>
+<button onclick="assignChore()">Assign Chore</button>
+</section>
+</div>
+</main>
+
+<script>
+let currentUser = '';
+let myHouseholds = [];
+
+async function api(path, options = {}) {
+    const response = await fetch(path, {
+        headers: {'Content-Type': 'application/json'},
+        ...options
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || data.error || 'Request failed');
+    return data;
+}
+
+function notify(message, error = false) {
+    const box = document.getElementById('message');
+    box.textContent = message;
+    box.className = error ? 'error' : '';
+    box.style.display = 'block';
+}
+
+async function run(action) {
+    try { await action(); }
+    catch (err) { notify(err.message, true); }
+}
+
+function element(tag, text, className) {
+    const node = document.createElement(tag);
+    node.textContent = text;
+    if (className) node.className = className;
+    return node;
+}
+
+function addButton(parent, label, action, className = '') {
+    const button = element('button', label, className);
+    button.onclick = () => run(action);
+    parent.appendChild(button);
+}
+
+function selectedHousehold() {
+    return document.getElementById('householdSelect').value;
+}
+
+async function register() {
+    await run(async () => {
+        const username = document.getElementById('newUser').value.trim();
+        const password = document.getElementById('newPassword').value;
+        await api('/register', {
+            method: 'POST',
+            body: JSON.stringify({username, password})
+        });
+        document.getElementById('username').value = username;
+        notify('Registered! Open your dashboard.');
+    });
+}
+
+async function login() {
+    await run(async () => {
+        currentUser = document.getElementById('username').value.trim();
+        if (!currentUser) throw new Error('Enter a username');
+        document.getElementById('dashboard').style.display = 'block';
+        await refreshHouseholds();
+        await loadChores();
+        notify('Dashboard loaded for ' + currentUser);
+    });
+}
+
+async function refreshHouseholds() {
+    const data = await api('/households?username=' + encodeURIComponent(currentUser));
+    myHouseholds = data.households;
+    const list = document.getElementById('households');
+    const select = document.getElementById('householdSelect');
+    const previous = select.value;
+    list.replaceChildren();
+    select.replaceChildren();
+
+    if (!myHouseholds.length) list.appendChild(element('p', 'No households yet. Create one below.'));
+    for (const house of myHouseholds) {
+        list.appendChild(element('div', house.household_name, 'item'));
+        const option = element('option', house.household_name);
+        option.value = house.household_id;
+        select.appendChild(option);
+    }
+    if (myHouseholds.some(h => String(h.household_id) === previous)) select.value = previous;
+    await loadMembers();
+}
+
+async function createHousehold() {
+    await run(async () => {
+        const household_name = document.getElementById('householdName').value.trim();
+        await api('/households', {
+            method: 'POST',
+            body: JSON.stringify({household_name, username: currentUser})
+        });
+        document.getElementById('householdName').value = '';
+        await refreshHouseholds();
+        notify('Household created!');
+    });
+}
+
+async function loadMembers() {
+    const id = selectedHousehold();
+    const list = document.getElementById('members');
+    const assignee = document.getElementById('assignee');
+    list.replaceChildren();
+    assignee.replaceChildren();
+    if (!id) return;
+
+    await run(async () => {
+        const data = await api('/households/' + id + '/members');
+        const house = myHouseholds.find(h => String(h.household_id) === id);
+        for (const member of data.members) {
+            const row = element('div', member.username, 'item');
+            if (member.username !== house.created_by) {
+                addButton(row, 'Remove', async () => {
+                    await api('/households/' + id + '/members/' + encodeURIComponent(member.username), {method:'DELETE'});
+                    await loadMembers();
+                    notify('Member removed');
+                }, 'danger');
+            }
+            list.appendChild(row);
+            const option = element('option', member.username);
+            option.value = member.username;
+            assignee.appendChild(option);
+        }
+    });
+}
+
+async function addMember() {
+    await run(async () => {
+        const id = selectedHousehold();
+        if (!id) throw new Error('Create a household first');
+        const username = document.getElementById('memberName').value.trim();
+        await api('/households/' + id + '/members', {
+            method: 'POST',
+            body: JSON.stringify({username})
+        });
+        document.getElementById('memberName').value = '';
+        await loadMembers();
+        notify('Member added!');
+    });
+}
+
+async function leaveHousehold() {
+    await run(async () => {
+        const id = selectedHousehold();
+        if (!id) throw new Error('Select a household');
+        if (!confirm('Leave this household?')) return;
+        await api('/households/' + id + '/leave', {
+            method: 'DELETE',
+            body: JSON.stringify({username: currentUser})
+        });
+        await refreshHouseholds();
+        notify('You left the household');
+    });
+}
+
+async function loadChores() {
+    const data = await api('/my-chores?username=' + encodeURIComponent(currentUser));
+    const list = document.getElementById('chores');
+    list.replaceChildren();
+
+    if (!data.chores.length) list.appendChild(element('p', 'No chores assigned yet.'));
+
+    for (const chore of data.chores) {
+        const card = element('div', '', chore.completed ? 'item done' : 'item');
+        card.appendChild(element('h3', chore.name));
+        card.appendChild(element('p', `${chore.points} points | Due: ${chore.due_date || 'No date'}`));
+        card.appendChild(element('p', chore.completed ? 'Completed' : 'Not completed'));
+
+        if (!chore.completed) {
+            addButton(card, 'Mark Complete', async () => {
+                await api('/chores/' + chore.id + '/complete', {
+                    method: 'PATCH',
+                    body: JSON.stringify({username: currentUser})
+                });
+                await loadChores();
+                notify('Chore completed!');
+            });
+        }
+        list.appendChild(card);
+    }
+}
+
+async function assignChore() {
+    await run(async () => {
+        const household_id = Number(selectedHousehold());
+        if (!household_id) throw new Error('Create a household first');
+        const name = document.getElementById('choreName').value.trim();
+        const points = Number(document.getElementById('points').value);
+        const assigned_to = document.getElementById('assignee').value;
+        const due_date = document.getElementById('dueDate').value;
+        await api('/assigned-chores', {
+            method: 'POST',
+            body: JSON.stringify({name, points, assigned_to, household_id, due_date})
+        });
+        document.getElementById('choreName').value = '';
+        await loadChores();
+        notify('Chore assigned!');
+    });
+}
+</script>
+</body>
+</html>

@@ -21,3 +21,15 @@ CREATE TABLE IF NOT EXISTS household_members (
     PRIMARY KEY (household_id, username)
 );
 
+
+ALTER TABLE chores
+ADD COLUMN IF NOT EXISTS assigned_to VARCHAR(50) REFERENCES users(username);
+
+ALTER TABLE chores
+ADD COLUMN IF NOT EXISTS household_id INTEGER REFERENCES households(household_id) ON DELETE CASCADE;
+
+ALTER TABLE chores
+ADD COLUMN IF NOT EXISTS due_date DATE;
+
+ALTER TABLE chores
+ADD COLUMN IF NOT EXISTS completed BOOLEAN NOT NULL DEFAULT FALSE;
