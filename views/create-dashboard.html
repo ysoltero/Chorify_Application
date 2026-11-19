@@ -183,89 +183,7 @@
     </div>
  
    <div id="taskList">
-    <div class="card mb-3 shadow-sm task-card" data-assignee="Username" data-status="todo">
-    <div class="card-body">
-
-        <div class="row align-items-center">
-
-            <!-- Task information -->
-            <div class="col-md-5">
-                <h5 class="mb-1">Wash the dishes</h5>
-                <small class="text-muted">Assigned to: Username</small>
-            </div>
-
-            <!-- Due date -->
-            <div class="col-md-2">
-                <small class="text-muted d-block">Due</small>
-                <span>Nov 20, 2026</span>
-            </div>
-
-            <!-- Points -->
-            <div class="col-md-2">
-                <small class="text-muted d-block">Points</small>
-                <span>10 points</span>
-            </div>
-
-            <!-- Status -->
-            <div class="col-md-2">
-                <span class="badge bg-warning text-dark">
-                    To do
-                </span>
-            </div>
-
-            <!-- Complete -->
-            <div class="col-md- text-end">
-                <input
-                    class="form-check-input complete-checkbox"
-                    type="checkbox"
-                    title="Mark task as complete"
-                >
-            </div>
-
-        </div>
-
-    </div>
-</div>
-<div class="card mb-3 shadow-sm task-card" data-assignee="Alex" data-status="progress">
-    <div class="card-body">
-
-        <div class="row align-items-center">
-
-            <div class="col-md-5">
-                <h5 class="mb-1">Take out the trash</h5>
-                <small class="text-muted">Assigned to: Alex</small>
-            </div>
-
-            <div class="col-md-2">
-                <small class="text-muted d-block">Due</small>
-                <span>Nov 21, 2026</span>
-            </div>
-
-            <div class="col-md-2">
-                <small class="text-muted d-block">Points</small>
-                <span>15 points</span>
-            </div>
-
-            <div class="col-md-2">
-                <span class="badge bg-primary">
-                    In progress
-                </span>
-            </div>
-
-            <div class="col-md-1 text-end">
-                <input
-                    class="form-check-input complete-checkbox"
-                    type="checkbox"
-                    title="Mark task as complete"
-                >
-            </div>
-
-        </div>
-
-    </div>
-</div>
-</div>
-        </div>
+    
     </div>
 <!--Java Script that -->
 <script>
@@ -331,26 +249,52 @@ document.addEventListener("DOMContentLoaded", function() {
 
     const name = document.getElementById("taskName").value;
     const assignee = document.getElementById("taskAssignee").value;
+    const dueDate = document.getElementById("taskDueDate").value;
+    const points = document.getElementById("taskPoints").value;
 
     const task = document.createElement("div");
     task.className = "card mb-3 shadow-sm task-card";
     task.dataset.assignee = assignee;
     task.dataset.status = "todo";
 
-    task.innerHTML = `
-        <div class="card-body">
-            <h5>${name}</h5>
-            <p>Assigned to: ${assignee}</p>
-            <span class="badge bg-warning text-dark">To do</span>
+ task.innerHTML = `
+    <div class="card-body">
+        <div class="row align-items-center">
+            <div class="col-md-5">
+                <h5>${name}</h5>
+                <small>Assigned to: ${assignee}</small>
+            </div>
+
+            <div class="col-md-2">
+                <small class="text-muted">Due</small>
+                <p>${dueDate}</p>
+            </div>
+
+            <div class="col-md-2">
+                <small class="text-muted">Points</small>
+                <p>${points} points</p>
+            </div>
+
+            <div class="col-md-2">
+                <span class="badge bg-warning text-dark">To do</span>
+            </div>
+
+            <div class="col-md-1 text-end">
+                <input type="checkbox" class="form-check-input complete-checkbox">
+            </div>
         </div>
-    `;
+    </div>
+`;
 
     document.getElementById("taskList").appendChild(task);
+    
+
 
     this.reset();
     bootstrap.Modal.getInstance(document.getElementById("createTaskModal")).hide();
 });
 });
+
 </script>
 <!-- Create Task Popup -->
 <div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskLabel" aria-hidden="true">
