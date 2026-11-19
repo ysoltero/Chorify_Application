@@ -204,7 +204,7 @@ function setActiveButton(activeButton) {
 }
 
 allTasksBtn.addEventListener("click", function () {
-    tasks.forEach(task => {
+    document.querySelectorAll(".task-card").forEach(task => {
         task.style.display = "block";
     });
 
@@ -212,7 +212,7 @@ allTasksBtn.addEventListener("click", function () {
 });
 
 myTasksBtn.addEventListener("click", function () {
-    tasks.forEach(task => {
+    document.querySelectorAll(".task-card").forEach(task => {
         task.style.display =
             task.dataset.assignee === "Username" ? "block" : "none";
     });
@@ -230,14 +230,20 @@ completedBtn.addEventListener("click", function () {
 });
 
 const checkboxes = document.querySelectorAll(".complete-checkbox");
+
 checkboxes.forEach(checkbox => {
     checkbox.addEventListener("change", function () {
+
         const task = this.closest(".task-card");
 
         if (this.checked) {
             task.dataset.status = "completed";
         } else {
             task.dataset.status = "todo";
+        }
+
+        if (completedBtn.classList.contains("btn-dark")) {
+            task.style.display = this.checked ? "block" : "none";
         }
     });
 });
