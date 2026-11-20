@@ -1,8 +1,13 @@
+const choreRoutes = require('./ProjectSourceCode/choreRoutes');
+const householdRoutes = require('./ProjectSourceCode/householdRoutes');
+const path = require('path');
+const {engine} = require('express-handlebars');
+const scoreboard = require('./ProjectSourceCode/scoreboard');
 // app.js
 const express = require('express');
 const bcrypt = require('bcryptjs');
 const db = require('./ProjectSourceCode/src/db');
-const validateRegistration = require('./validateRegistration');
+const validateRegistration = require('./ProjectSourceCode/validateRegistration');
 
 const app = express();
 
@@ -42,4 +47,13 @@ app.post('/register', async (req, res) => {
 });
 
 // Export app for Mocha/Chai-HTTP testing (do NOT call app.listen here)
+
+app.engine('hbs', engine({extname: '.hbs', defaultLayout: false}));
+app.set('view engine', 'hbs');
+app.set('views', path.join(__dirname, 'views'));
+app.use(express.static(path.join(__dirname, 'views')));
+app.use(householdRoutes);
+app.use(choreRoutes);
+app.use(scoreboard);
+
 module.exports = app;

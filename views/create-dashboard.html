@@ -214,7 +214,7 @@ allTasksBtn.addEventListener("click", function () {
 myTasksBtn.addEventListener("click", function () {
     document.querySelectorAll(".task-card").forEach(task => {
         task.style.display =
-            task.dataset.assignee === "Username" ? "block" : "none";
+            task.dataset.assignee === dashboardUsername ? "block" : "none";
     });
 
     setActiveButton(myTasksBtn);
@@ -247,68 +247,176 @@ checkboxes.forEach(checkbox => {
         }
     });
 });
-//adds task name and assigne
+
+// Save new tasks to the database
 document.addEventListener("DOMContentLoaded", function() {
-    document.getElementById("createTaskForm").addEventListener("submit", function(event) {
-    event.preventDefault();
+    document.getElementById("createTaskForm").addEventListener("submit", async function(event) {
+        event.preventDefault();
 
-    const name = document.getElementById("taskName").value;
-    const assignee = document.getElementById("taskAssignee").value;
-    const dueDate = document.getElementById("taskDueDate").value;
-    const points = document.getElementById("taskPoints").value;
+        const household_id = Number(localStorage.getItem("chorifyHouseholdId"));
+        if (!household_id) {
+            alert("Please select a household first.");
+            return;
+        }
 
-    const task = document.createElement("div");
-    task.className = "card mb-3 shadow-sm task-card";
-    task.dataset.assignee = assignee;
-    task.dataset.status = "todo";
+        const task = {
+            name: document.getElementById("taskName").value.trim(),
+            assigned_to: document.getElementById("taskAssignee").value,
+            due_date: document.getElementById("taskDueDate").value,
+            points: Number(document.getElementById("taskPoints").value),
+            household_id
+        };
 
- task.innerHTML = `
-    <div class="card-body">
-        <div class="row align-items-center">
-            <div class="col-md-5">
-                <h5>${name}</h5>
-                <small>Assigned to: ${assignee}</small>
-            </div>
+        try {
+            const response = await fetch("/assigned-chores", {
+                method: "POST",
+                credentials: "same-origin",
+                headers: {"Content-Type": "application/json"},
+                body: JSON.stringify(task)
+            });
 
-            <div class="col-md-2">
-                <small class="text-muted">Due</small>
-                <p>${dueDate}</p>
-            </div>
+            const result = await response.json();
+            if (!response.ok) {
+                alert(result.message || "Could not create task");
+                return;
+            }
 
-            <div class="col-md-2">
-                <small class="text-muted">Points</small>
-                <p>${points} points</p>
-            </div>
+            this.reset();
+            bootstrap.Modal.getInstance(
+                document.getElementById("createTaskModal")
+            ).hide();
 
-            <div class="col-md-2">
-                <span class="badge bg-warning text-dark">To do</span>
-            </div>
-
-            <div class="col-md-1 text-end">
-                <input type="checkbox" class="form-check-input complete-checkbox">
-            </div>
-        </div>
-    </div>
-`;
-
-    document.getElementById("taskList").appendChild(task);
-    const checkbox = task.querySelector(".complete-checkbox");
-
-    checkbox.addEventListener("change", function () {
-        if (this.checked) {
-            task.dataset.status = "completed";
-        } else {
-            task.dataset.status = "todo";
+            await loadDashboardTasks();
+        } catch (err) {
+            alert("Could not save task: " + err.message);
         }
     });
-        
-
-
-    this.reset();
-    bootstrap.Modal.getInstance(document.getElementById("createTaskModal")).hide();
-});
 });
 
+let dashboardUsername = null;
+
+async function loadDashboardTasks() {
+    try {
+        const sessionResponse = await fetch("/session");
+        if (!sessionResponse.ok) {
+            window.location.href = "/login.html";
+            return;
+        }
+
+        const session = await sessionResponse.json();
+        dashboardUsername = session.username;
+        const response = await fetch(
+            "/my-chores?username=" + encodeURIComponent(session.username)
+        );
+
+        if (!response.ok) throw new Error("Could not load tasks");
+
+        const data = await response.json();
+        const taskList = document.getElementById("taskList");
+        taskList.replaceChildren();
+
+        data.chores.forEach(chore => {
+            const card = document.createElement("div");
+            card.className = "card mb-3 shadow-sm task-card";
+            card.dataset.assignee = chore.assigned_to;
+            card.dataset.status = chore.completed ? "completed" : "todo";
+
+            const body = document.createElement("div");
+            body.className = "card-body";
+
+            const row = document.createElement("div");
+            row.className = "row align-items-center";
+
+            const nameCol = document.createElement("div");
+            nameCol.className = "col-md-5";
+
+            const name = document.createElement("h5");
+            name.textContent = chore.name;
+
+            const assignee = document.createElement("small");
+            assignee.textContent = "Assigned to: " + chore.assigned_to;
+
+            nameCol.append(name, assignee);
+
+            const dueCol = document.createElement("div");
+            dueCol.className = "col-md-2";
+
+            const dueLabel = document.createElement("small");
+            dueLabel.className = "text-muted";
+            dueLabel.textContent = "Due";
+
+            const dueDate = document.createElement("p");
+            dueDate.textContent = chore.due_date || "No due date";
+
+            dueCol.append(dueLabel, dueDate);
+
+            const pointsCol = document.createElement("div");
+            pointsCol.className = "col-md-2";
+
+            const pointsLabel = document.createElement("small");
+            pointsLabel.className = "text-muted";
+            pointsLabel.textContent = "Points";
+
+            const points = document.createElement("p");
+            points.textContent = chore.points + " points";
+
+            pointsCol.append(pointsLabel, points);
+
+            const statusCol = document.createElement("div");
+            statusCol.className = "col-md-2";
+
+            const status = document.createElement("span");
+            status.className = chore.completed ?
+                "badge bg-success" : "badge bg-warning text-dark";
+            status.textContent = chore.completed ? "Completed" : "To do";
+
+            statusCol.appendChild(status);
+
+            const checkboxCol = document.createElement("div");
+            checkboxCol.className = "col-md-1 text-end";
+
+            const checkbox = document.createElement("input");
+            checkbox.type = "checkbox";
+            checkbox.className = "form-check-input complete-checkbox";
+            checkbox.checked = chore.completed;
+            checkbox.disabled = false;
+            checkbox.addEventListener("change", async function() {
+                checkbox.disabled = true;
+
+                try {
+                    const action = checkbox.checked ? "complete" : "uncomplete";
+                    const response = await fetch("/chores/" + chore.id + "/" + action, {
+                        method: "PATCH",
+                        credentials: "same-origin",
+                        headers: {"Content-Type": "application/json"},
+                        body: JSON.stringify({username: dashboardUsername})
+                    });
+
+                    const result = await response.json();
+                    if (!response.ok) throw new Error(result.message || "Could not update chore");
+
+                    await loadDashboardTasks();
+                } catch (err) {
+                    checkbox.checked = !checkbox.checked;
+                    alert(err.message);
+                } finally {
+                    checkbox.disabled = false;
+                }
+            });
+
+            checkboxCol.appendChild(checkbox);
+            row.append(nameCol, dueCol, pointsCol, statusCol, checkboxCol);
+            body.appendChild(row);
+            card.appendChild(body);
+            taskList.appendChild(card);
+        });
+    } catch (err) {
+        console.error(err);
+        alert(err.message);
+    }
+}
+
+document.addEventListener("DOMContentLoaded", loadDashboardTasks);
 </script>
 <!-- Create Task Popup -->
 <div class="modal fade" id="createTaskModal" tabindex="-1" aria-labelledby="createTaskLabel" aria-hidden="true">
@@ -337,10 +445,8 @@ document.addEventListener("DOMContentLoaded", function() {
                     <div class="mb-3">
                         <label class="form-label">Assign To</label>
                         <select id="taskAssignee" class="form-select" required>
-                            <option value="">Select a household member</option>
-                            <option>Username</option>
-                            <option>Alex</option>
-                        </select>
+    <option value="">Select a household member</option>
+</select>
                     </div>
 
                     <div class="mb-3">
@@ -368,6 +474,60 @@ document.addEventListener("DOMContentLoaded", function() {
 
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+async function loadTaskAssignees() {
+    const select = document.getElementById('taskAssignee');
+    select.replaceChildren();
+
+    const placeholder = document.createElement('option');
+    placeholder.value = '';
+    placeholder.textContent = 'Select a household member';
+    select.appendChild(placeholder);
+
+    try {
+        const sessionResponse = await fetch('/session');
+        if (!sessionResponse.ok) throw new Error('Please log in');
+
+        const session = await sessionResponse.json();
+        const householdResponse = await fetch(
+            '/households?username=' + encodeURIComponent(session.username)
+        );
+        if (!householdResponse.ok) throw new Error('Could not load households');
+
+        const householdData = await householdResponse.json();
+        const savedId = Number(localStorage.getItem('chorifyHouseholdId'));
+        const household = householdData.households.find(
+            h => h.household_id === savedId
+        );
+
+        if (!household) {
+            placeholder.textContent = 'Select a household on the Household page first';
+            return;
+        }
+
+        const response = await fetch('/households/' + household.household_id + '/members');
+        if (!response.ok) throw new Error('Could not load household members');
+
+        const data = await response.json();
+
+        data.members.forEach(member => {
+            const option = document.createElement('option');
+            option.value = member.username;
+            option.textContent = member.username;
+            select.appendChild(option);
+        });
+    } catch (err) {
+        console.error(err);
+        placeholder.textContent = err.message;
+    }
+}
+
+document.getElementById('createTaskModal').addEventListener(
+    'show.bs.modal', loadTaskAssignees
+);
+</script>
 
 </body>
 </html>

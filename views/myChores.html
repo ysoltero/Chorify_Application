@@ -99,26 +99,138 @@
 
             <div class="container mt-4">
 
-<!--header card-->  
-        <h2 class="mb-3">My Chores</h2>
-        <div class="card shadow-sm mb-3">
-            <div class="card-body">
-                <p class="text-secondary mb-0">Complete your tasks and grab your points!</p>
-                <h1 class="mb-0">To do:</h1>
-                <div>
-                    <div>
-                        <p class="mb-0">-----------------</p>
-                    </div>
 
-                    <div>
-                    </div>
-                </div>
+<h2 class="mb-3">My Chores</h2>
 
-            </div>
-        </div>
-        
-    <!-- Bootstrap JavaScript -->
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <p class="text-secondary">Complete your tasks and grab your points!</p>
+        <h5 id="choreUsername"></h5>
+        <div id="choreMessage" role="status"></div>
+        <h4>To do:</h4>
+        <div id="myChoreList" class="list-group"></div>
+    </div>
+</div>
+
+<div class="card shadow-sm mb-3">
+    <div class="card-body">
+        <h5>Assign a chore</h5>
+        <form id="assignChoreForm">
+            <input id="choreName" class="form-control mb-2" placeholder="Chore name" required>
+            <input id="choreAssignee" class="form-control mb-2" placeholder="Assign to username" required>
+            <input id="chorePoints" type="number" min="0" class="form-control mb-2" placeholder="Points" required>
+            <input id="choreDueDate" type="date" class="form-control mb-2" required>
+            <button class="btn btn-primary" type="submit">Assign chore</button>
+        </form>
+    </div>
+</div>
+</div>
+</div>
+</div>
+<!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
+
+
+<script>
+let currentUser = null;
+
+function showChoreMessage(text, error = false) {
+    const message = document.getElementById('choreMessage');
+    message.textContent = text;
+    message.className = error ? 'alert alert-danger' : 'alert alert-success';
+}
+
+async function choreApi(url, options = {}) {
+    const response = await fetch(url, {
+        credentials: 'same-origin',
+        ...options,
+        headers: {'Content-Type': 'application/json', ...options.headers}
+    });
+    const data = await response.json();
+    if (!response.ok) throw new Error(data.message || 'Request failed');
+    return data;
+}
+
+async function loadMyChores() {
+    const data = await choreApi('/my-chores?username=' + encodeURIComponent(currentUser));
+    const list = document.getElementById('myChoreList');
+    list.replaceChildren();
+
+    if (data.chores.length === 0) {
+        const empty = document.createElement('p');
+        empty.className = 'text-secondary';
+        empty.textContent = 'No chores assigned to you yet.';
+        list.appendChild(empty);
+        return;
+    }
+
+    data.chores.forEach(chore => {
+        const item = document.createElement('div');
+        item.className = 'list-group-item';
+
+        const title = document.createElement('strong');
+        title.textContent = chore.name;
+
+        const details = document.createElement('p');
+        details.className = 'mb-0 text-secondary';
+        details.textContent = 'Due: ' + (chore.due_date || 'No due date') +
+            ' | Points: ' + chore.points;
+
+        const status = document.createElement('span');
+        status.className = chore.completed ? 'badge bg-success' : 'badge bg-secondary';
+        status.textContent = chore.completed ? 'Completed' : 'To do';
+
+        item.appendChild(title);
+        item.appendChild(details);
+        item.appendChild(status);
+        list.appendChild(item);
+    });
+}
+
+document.getElementById('assignChoreForm').addEventListener('submit', async e => {
+    e.preventDefault();
+
+    try {
+        const household_id = Number(localStorage.getItem('chorifyHouseholdId'));
+        if (!household_id) throw new Error('Select a household first');
+
+        const data = {
+            name: document.getElementById('choreName').value.trim(),
+            assigned_to: document.getElementById('choreAssignee').value.trim(),
+            points: Number(document.getElementById('chorePoints').value),
+            due_date: document.getElementById('choreDueDate').value,
+            household_id
+        };
+
+        await choreApi('/assigned-chores', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+
+        e.target.reset();
+        showChoreMessage('Chore assigned successfully');
+        await loadMyChores();
+    } catch (err) {
+        showChoreMessage(err.message, true);
+    }
+});
+
+async function initChores() {
+    try {
+        const session = await choreApi('/session');
+        currentUser = session.username;
+        document.getElementById('choreUsername').textContent = 'Assigned to: ' + currentUser;
+        await loadMyChores();
+    } catch (err) {
+        showChoreMessage(err.message, true);
+        if (err.message === 'Please log in') {
+            window.location.href = '/login.html';
+        }
+    }
+}
+
+initChores();
+</script>
 
 </body>
 </html>

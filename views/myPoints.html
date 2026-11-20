@@ -117,6 +117,26 @@
             </div>
         </div>
         
+
+        <div class="card shadow-sm mb-3">
+            <div class="card-body">
+                <h3 class="mb-3">Household Scoreboard</h3>
+                <iframe id="scoreboardFrame" title="Household Scoreboard"
+                    style="width:100%; min-height:300px; border:0;"></iframe>
+            </div>
+        </div>
+
+        <script>
+            const householdId = new URLSearchParams(window.location.search).get('household_id');
+            const frame = document.getElementById('scoreboardFrame');
+
+            if (householdId && /^\d+$/.test(householdId) && Number(householdId) > 0) {
+                frame.src = '/scoreboard?household_id=' + encodeURIComponent(householdId);
+            } else {
+                frame.replaceWith(document.createTextNode('Select a household to view its scoreboard.'));
+            }
+        </script>
+
     <!-- Bootstrap JavaScript -->
     <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.3/dist/js/bootstrap.bundle.min.js"></script>
 
